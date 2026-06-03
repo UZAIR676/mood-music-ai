@@ -1,6 +1,6 @@
 
 
-DATASET_PATH = "maestro-v3.0.0"   # MIDI files ka folder
+DATASET_PATH = "maestro-v3.0.0"   # MIDI files  folder
 
 # Token settings
 PITCH_BINS    = 128

@@ -19,18 +19,17 @@ def notes_to_tokens(notes):
         # Pitch token
         pitch = note["pitch"]  # 0-127
 
-        # Velocity token (128 values ko 32 mein compress karo)
+        # Velocity token 
         velocity = min(note["velocity"] // 4, VELOCITY_BINS - 1)
 
-        # Time token (kitni der baad yeh note aaya)
+        # Time token 
         time_diff = note["start"] - prev_start
         time_bin = min(int(time_diff * 50), TIME_BINS - 1)
 
-        # Duration token (note kitna lamba tha)
+        # Duration token 
         duration = note["end"] - note["start"]
         dur_bin = min(int(duration * 50), DURATION_BINS - 1)
 
-        # Har token ka apna range hai vocab mein
         tokens.append(pitch)                              # 0-127
         tokens.append(PITCH_BINS + velocity)              # 128-159
         tokens.append(PITCH_BINS + VELOCITY_BINS + time_bin)        # 160-259
