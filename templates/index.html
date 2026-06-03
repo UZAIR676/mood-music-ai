@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --border-hover: #3a3a3a;
+    --text: #f0f0f0;
+    --muted: #666;
+    --accent: #c8f04a;
+    --accent-dim: rgba(200,240,74,0.12);
+    --accent-border: rgba(200,240,74,0.35);
+    --danger: #f05a4a;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1rem;
+  }
+
+  .container { width: 100%; max-width: 520px; }
+
+  .header { margin-bottom: 2.5rem; }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 20px; height: 20px; }
+  h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.3px; }
+  .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .section { margin-bottom: 1.75rem; }
+  .label {
+    font-size: 11px; font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  .mood-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .mood-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text);
+  }
+  .mood-btn:hover { border-color: var(--border-hover); background: var(--surface2); }
+  .mood-btn.active {
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+  }
+  .mood-emoji { font-size: 20px; margin-bottom: 6px; }
+  .mood-name { font-size: 12px; font-weight: 500; display: block; }
+  .mood-scale { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
+  .mood-btn.active .mood-scale { color: var(--accent); }
+
+  .tempo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .tempo-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text);
+  }
+  .tempo-btn:hover { border-color: var(--border-hover); background: var(--surface2); }
+  .tempo-btn.active { border-color: var(--accent-border); background: var(--accent-dim); }
+  .tempo-btn span { font-size: 13px; font-weight: 500; }
+  .bars { display: flex; gap: 3px; align-items: flex-end; height: 14px; }
+  .bar { width: 4px; background: var(--muted); border-radius: 2px; }
+  .tempo-btn.active .bar { background: var(--accent); }
+
+  .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  input[type=range] {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 4px; background: var(--surface2);
+    border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .token-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; color: var(--accent);
+    min-width: 70px; text-align: right;
+  }
+
+  .estimate-row {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 8px; margin-top: 4px;
+  }
+  .est-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .est-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .est-val { font-size: 15px; font-weight: 500; font-family: 'DM Mono', monospace; }
+
+  .name-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .name-input:focus { border-color: var(--accent-border); }
+  .name-input::placeholder { color: var(--muted); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0; }
+
+  .gen-btn {
+    width: 100%; padding: 14px;
+    background: var(--accent);
+    color: #0d0d0d;
+    border: none; border-radius: var(--radius);
+    font-size: 14px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+  }
+  .gen-btn:hover { opacity: 0.88; }
+  .gen-btn:active { transform: scale(0.99); }
+  .gen-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .result-card {
+    margin-top: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .result-card.visible { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .result-top { display: flex; justify-content: space-between; align-items: center; }
+  .result-file { font-size: 13px; font-weight: 500; font-family: 'DM Mono', monospace; color: var(--accent); }
+  .result-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .dl-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 12px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    padding: 7px 14px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    transition: border-color 0.15s;
+    text-decoration: none;
+  }
+  .dl-btn:hover { border-color: var(--border-hover); }
+
+  .error-msg {
+    font-size: 12px; color: var(--danger);
+    margin-top: 8px; display: none;
+  }
+  .error-msg.visible { display: block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; animation: spin 0.9s linear infinite; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="2.2" stroke-linecap="round">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+      </div>
+      <h1>Music AI</h1>
+    </div>
+    <p class="sub">Generate original piano music using your trained model</p>
+  </div>
+
+  <div class="section">
+    <p class="label">Mood</p>
+    <div class="mood-grid">
+      <button class="mood-btn active" data-mood="happy" onclick="selectMood(this)">
+        <div class="mood-emoji">☀️</div>
+        <span class="mood-name">Happy</span>
+        <span class="mood-scale">Major</span>
+      </button>
+      <button class="mood-btn" data-mood="sad" onclick="selectMood(this)">
+        <div class="mood-emoji">🌧️</div>
+        <span class="mood-name">Sad</span>
+        <span class="mood-scale">Minor</span>
+      </button>
+      <button class="mood-btn" data-mood="dramatic" onclick="selectMood(this)">
+        <div class="mood-emoji">⚡</div>
+        <span class="mood-name">Dramatic</span>
+        <span class="mood-scale">Diminished</span>
+      </button>
+      <button class="mood-btn" data-mood="relaxing" onclick="selectMood(this)">
+        <div class="mood-emoji">🌿</div>
+        <span class="mood-name">Relaxing</span>
+        <span class="mood-scale">Pentatonic</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="label">Tempo</p>
+    <div class="tempo-grid">
+      <button class="tempo-btn" data-tempo="slow" onclick="selectTempo(this)">
+        <div class="bars">
+          <div class="bar" style="height:6px"></div>
+          <div class="bar" style="height:6px"></div>
+          <div class="bar" style="height:6px"></div>
+        </div>
+        <span>Slow</span>
+      </button>
+      <button class="tempo-btn active" data-tempo="medium" onclick="selectTempo(this)">
+        <div class="bars">
+          <div class="bar" style="height:6px"></div>
+          <div class="bar" style="height:10px"></div>
+          <div class="bar" style="height:6px"></div>
+        </div>
+        <span>Medium</span>
+      </button>
+      <button class="tempo-btn" data-tempo="fast" onclick="selectTempo(this)">
+        <div class="bars">
+          <div class="bar" style="height:5px"></div>
+          <div class="bar" style="height:10px"></div>
+          <div class="bar" style="height:14px"></div>
+        </div>
+        <span>Fast</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="label">Length</p>
+    <div class="slider-row">
+      <input type="range" min="200" max="2000" step="100" value="1000"
+             id="tokenSlider" oninput="updateSlider()">
+      <span class="token-val" id="tokenVal">1000 tok</span>
+    </div>
+    <div class="estimate-row">
+      <div class="est-card">
+        <div class="est-label">Notes</div>
+        <div class="est-val" id="estNotes">~250</div>
+      </div>
+      <div class="est-card">
+        <div class="est-label">Duration</div>
+        <div class="est-val" id="estDuration">~1.5m</div>
+      </div>
+      <div class="est-card">
+        <div class="est-label">Length</div>
+        <div class="est-val" id="estComplexity">Medium</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="label">File name</p>
+    <input class="name-input" type="text" id="fileName" placeholder="my_music">
+  </div>
+
+  <hr class="divider">
+
+  <button class="gen-btn" id="genBtn" onclick="generate()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    Generate music
+  </button>
+  <p class="error-msg" id="errorMsg"></p>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-top">
+      <div>
+        <div class="result-file" id="resultFilename"></div>
+        <div class="result-meta" id="resultStats"></div>
+      </div>
+      <a class="dl-btn" id="dlBtn" href="#">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const MOOD_SCALE = { happy: 7, sad: 6, dramatic: 6, relaxing: 5 };
+  const TEMPO_MULT = { slow: 1/0.3, medium: 1/0.6, fast: 1/1.2 };
+
+  let currentMood = "happy", currentTempo = "medium";
+
+  function selectMood(el) {
+    document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+    currentMood = el.dataset.mood;
+    updateEstimate();
+  }
+
+  function selectTempo(el) {
+    document.querySelectorAll(".tempo-btn").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+    currentTempo = el.dataset.tempo;
+    updateEstimate();
+  }
+
+  function updateSlider() {
+    const v = parseInt(document.getElementById("tokenSlider").value);
+    document.getElementById("tokenVal").textContent = v + " tok";
+    updateEstimate();
+  }
+
+  function updateEstimate() {
+    const tokens = parseInt(document.getElementById("tokenSlider").value);
+    const scaleFactor = MOOD_SCALE[currentMood] / 12;
+    const notes = Math.round((tokens / 4) * scaleFactor);
+    const avgGap = 0.3 * TEMPO_MULT[currentTempo] * 0.05;
+    const totalSec = notes * avgGap;
+    const mins = Math.floor(totalSec / 60);
+    const secs = Math.round(totalSec % 60);
+    const durLabel = totalSec < 60
+      ? Math.round(totalSec) + "s"
+      : mins + "m " + secs + "s";
+    const complexity = tokens < 500 ? "Short" : tokens < 1200 ? "Medium" : tokens < 1800 ? "Long" : "Very long";
+    document.getElementById("estNotes").textContent = "~" + notes;
+    document.getElementById("estDuration").textContent = "~" + durLabel;
+    document.getElementById("estComplexity").textContent = complexity;
+  }
+
+  async function generate() {
+    const btn = document.getElementById("genBtn");
+    const errEl = document.getElementById("errorMsg");
+    const resultCard = document.getElementById("resultCard");
+    errEl.classList.remove("visible");
+    resultCard.classList.remove("visible");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin">⟳</span> Generating...';
+
+    const tokens = parseInt(document.getElementById("tokenSlider").value);
+    const name = document.getElementById("fileName").value.trim() || currentMood + "_" + currentTempo;
+
+    try {
+      const res = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mood: currentMood, tempo: currentTempo, tokens, name })
+      });
+      const data = await res.json();
+      if (data.error) {
+        errEl.textContent = "⚠ " + data.error;
+        errEl.classList.add("visible");
+      } else {
+        document.getElementById("resultFilename").textContent = data.file;
+        document.getElementById("resultStats").textContent = data.notes + " notes · " + data.duration + "s";
+        document.getElementById("dlBtn").href = "/download/" + data.file;
+        resultCard.classList.add("visible");
+      }
+    } catch (e) {
+      errEl.textContent = "⚠ Could not reach server. Is Flask running?";
+      errEl.classList.add("visible");
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate music';
+  }
+
+  updateEstimate();
+</script>
+</body>
+</html>
