@@ -57,7 +57,7 @@ Mood: Happy  |  Tempo: Medium  |  Tokens: 1000
 ## Installation
 
 ```bash
-git clone https://github.com/your-username/maestro-ai
+git clone https://github.com/UZAIR676/mood-music-ai
 cd maestro-ai
 pip install -r requirements.txt
 ```
@@ -148,7 +148,3 @@ Trained on the [MAESTRO v3.0.0](https://magenta.tensorflow.org/datasets/maestro)
 - [MAESTRO Dataset](https://magenta.tensorflow.org/datasets/maestro) — training data
 
 ---
-
-## License
-
-MIT
