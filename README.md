@@ -1,4 +1,4 @@
-# 🎹 maestro-ai
+# 🎹 mood-music-ai
 
 > A transformer-based AI that generates piano music from scratch — trained on the MAESTRO dataset with mood and tempo control.
 
