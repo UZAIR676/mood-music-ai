@@ -1,6 +1,4 @@
-
-
-DATASET_PATH = "maestro-v3.0.0"   # MIDI files  folder
+DATASET_PATH = "maestro-v3.0.0"
 
 # Token settings
 PITCH_BINS    = 128
@@ -12,7 +10,7 @@ DURATION_BINS = 100
 VOCAB_SIZE = PITCH_BINS + VELOCITY_BINS + TIME_BINS + DURATION_BINS + 4
 
 # Model size
-SEQ_LEN  = 256
+SEQ_LEN  = 256   # wapas purana
 D_MODEL  = 128
 N_HEADS  = 4
 N_LAYERS = 3
@@ -28,7 +26,7 @@ GRAD_CLIP  = 1.0
 # Generation
 TEMPERATURE = 1.0
 TOP_K       = 50
-GEN_LENGTH  = 512
+GEN_LENGTH  = 3000  # barhaya
 
 # Paths
 CHECKPOINT_DIR = "checkpoints"

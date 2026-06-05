@@ -23,6 +23,9 @@ TEMPOS = {
     "fast":   1.2,
 }
 
+# FIX 1: Minimum velocity — notes kabhi bhi bahut dheemi nahi hongi
+MIN_VELOCITY = 40
+
 def generate_music():
     device = torch.device("cpu")
 
@@ -116,9 +119,13 @@ def generate_music():
             if p % 12 in scale:
                 time_gap      = (t / 50.0) / max(0.1, tempo)
                 current_time += time_gap
+
+                # FIX 1: Velocity minimum 40 rakho — end mein bhi dheemi nahi hogi
+                raw_velocity = max(MIN_VELOCITY, v * 4)
+
                 notes.append({
                     "pitch":    p,
-                    "velocity": max(1, v * 4),
+                    "velocity": max(1, min(127, raw_velocity)),
                     "start":    current_time,
                     "end":      current_time + max(0.05, d / 50.0),
                 })
@@ -148,3 +155,6 @@ def generate_music():
 
     print(f"\nMusic saved: {out_path}")
     print(f"Play it at: www.midiano.com")
+
+if __name__ == "__main__":
+    generate_music()

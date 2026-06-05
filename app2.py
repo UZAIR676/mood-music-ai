@@ -1,6 +1,3 @@
-# ============================================================
-# app2.py — Web interface for Music AI
-# ============================================================
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -26,6 +23,17 @@ TEMPOS = {
     "fast":   1.2,
 }
 
+# Duration presets 
+DURATION_PRESETS = {
+    "1min":  500,
+    "3min":  1000,
+    "5min":  2000,
+    "10min": 4000,
+}
+
+# FIX 1: Minimum velocity — notes kabhi bhi bahut dheemi nahi hongi
+MIN_VELOCITY = 40
+
 def load_model():
     checkpoints = [f for f in os.listdir(CHECKPOINT_DIR) if f.endswith(".pt")]
     if not checkpoints:
@@ -43,27 +51,29 @@ def index():
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    data       = request.json
-    mood_input = data.get("mood", "happy")
-    tempo_input= data.get("tempo", "medium")
-    gen_tokens = int(data.get("tokens", 1000))
-    name       = data.get("name", "my_music").strip() or "my_music"
+    data        = request.json
+    mood_input  = data.get("mood", "happy")
+    tempo_input = data.get("tempo", "medium")
+    duration    = data.get("duration", "5min")
+    name        = data.get("name", "my_music").strip() or "my_music"
 
     mood  = MOODS.get(mood_input, MOODS["happy"])
     tempo = TEMPOS.get(tempo_input, TEMPOS["medium"])
+
+    # Duration se tokens calculate karo
+    gen_tokens = DURATION_PRESETS.get(duration, 12000)
 
     model = load_model()
     if not model:
         return jsonify({"error": "No model found! Train first."}), 400
 
-    # Generate tokens
     tokens = [60, 128, 160, 260]
     inp    = torch.tensor([tokens], dtype=torch.long)
 
     with torch.no_grad():
         for _ in range(gen_tokens):
             x      = inp[:, -SEQ_LEN:]
-            logits = model(x)[:, -1, :] / mood["temperature"]
+            logits = model(x)[:, -1, :] / max(0.1, mood["temperature"])
             top_k  = torch.topk(logits, TOP_K)
             probs  = torch.softmax(top_k.values, dim=-1)
             idx    = torch.multinomial(probs, 1)
@@ -71,7 +81,6 @@ def generate():
             inp    = torch.cat([inp, next_t.view(1,1)], dim=1)
             tokens.append(next_t.item())
 
-    # Tokens to notes
     notes        = []
     current_time = 0.0
     i = 0
@@ -83,20 +92,22 @@ def generate():
 
         if (0 <= p < PITCH_BINS and 0 <= v < VELOCITY_BINS and
             0 <= t < TIME_BINS  and 0 <= d < DURATION_BINS):
-            if p % 12 in mood["scale"]:
-                current_time += (t / 50.0) / max(0.1, tempo)
-                notes.append({
-                    "pitch":    p,
-                    "velocity": max(1, v * 4),
-                    "start":    current_time,
-                    "end":      current_time + max(0.05, d / 50.0),
-                })
+            current_time += max(0.05, t / 10.0) / max(0.1, tempo)
+
+            # FIX 1: Velocity minimum 40 rakho — end mein bhi dheemi nahi hogi
+            raw_velocity = max(MIN_VELOCITY, v * 4)
+
+            notes.append({
+                "pitch":    p,
+                "velocity": max(1, min(127, raw_velocity)),
+                "start":    current_time,
+                "end":      current_time + max(0.05, d / 50.0),
+            })
         i += 4
 
     if not notes:
         return jsonify({"error": "No notes generated, try again!"}), 400
 
-    # Save MIDI
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     pm   = pretty_midi.PrettyMIDI()
     inst = pretty_midi.Instrument(program=0)
@@ -111,11 +122,18 @@ def generate():
     out_path = os.path.join(OUTPUT_DIR, f"{name}.mid")
     pm.write(out_path)
 
+    duration_mins = int(current_time // 60)
+    duration_secs = int(current_time % 60)
+    duration_str  = f"{duration_mins}m {duration_secs}s" if duration_mins > 0 else f"{duration_secs}s"
+
     return jsonify({
-        "success": True,
-        "notes":    len(notes),
-        "duration": round(current_time, 1),
-        "file":     f"{name}.mid"
+        "success":      True,
+        "notes":        len(notes),
+        "duration":     round(current_time, 1),
+        "duration_str": duration_str,
+        "file":         f"{name}.mid",
+        "mood":         mood_input,
+        "tempo":        tempo_input,
     })
 
 @app.route("/download/<filename>")
