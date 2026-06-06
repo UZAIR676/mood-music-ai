@@ -147,12 +147,3 @@ Trained on the [MAESTRO v3.0.0](https://magenta.tensorflow.org/datasets/maestro)
 - [Flask](https://flask.palletsprojects.com/) — web interface
 - [MAESTRO Dataset](https://magenta.tensorflow.org/datasets/maestro) — training data
 
-<<<<<<< HEAD
----
-=======
----
-
-## License
-
-MIT
->>>>>>> 867d8d2b3ab2c2b6f6bc9d116d3f034bc03577a0
